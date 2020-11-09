@@ -28,23 +28,35 @@ router.get("/:id", (req, res) => {
         });
 });
 
+router.get("/", (req, res) => {
+    console.log(req.query);
+    User.findAll({
+        attributes: ["name", "username", "email"],
+        where: {
+            username: req.query.username,
+        },
+    })
+        .then((user) => {
+            res.send(user);
+        })
+        .catch((err) => {
+            res.send(err);
+        });
+});
+
 router.patch("/edit/:id", (req, res) => {
     const body = req.body;
+    const keyValue = {};
+    Object.keys(body).forEach((key) => {
+        keyValue[key] = body[key];
+    });
     const salt = genSaltSync(10);
-    body.password = hashSync(body.password, salt);
-    User.update(
-        {
-            name: body.name,
-            username: body.username,
-            password: body.password,
-            email: body.email,
+    if (body.password) body.password = hashSync(body.password, salt);
+    User.update(keyValue, {
+        where: {
+            id: req.params.id,
         },
-        {
-            where: {
-                id: req.params.id,
-            },
-        }
-    )
+    })
         .then(() => {
             res.send("Profile Changed");
         })
