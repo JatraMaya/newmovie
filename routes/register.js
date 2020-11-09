@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { genSaltSync, hashSync } = require("bcrypt");
+const { Op } = require("sequelize");
 const db = require("../connection/db");
 
 const User = require("../models/User");
