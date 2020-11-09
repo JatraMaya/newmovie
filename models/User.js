@@ -8,6 +8,7 @@ const User = db.define("user", {
     },
     username: {
         type: DataTypes.STRING,
+        unique: true,
         allowNull: false,
     },
     password: {
@@ -16,6 +17,7 @@ const User = db.define("user", {
     },
     email: {
         type: DataTypes.STRING,
+        unique: true,
         allowNull: false,
     },
 });

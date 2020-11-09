@@ -1,6 +1,5 @@
 const router = require("express").Router();
 const { genSaltSync, hashSync } = require("bcrypt");
-const { Op } = require("sequelize");
 const db = require("../connection/db");
 
 const User = require("../models/User");
@@ -17,7 +16,8 @@ router.post("/", (req, res) => {
     })
         .then(() => res.send("Success"))
         .catch((err) => {
-            console.log(err);
+            if (err.errors[0].message === "username must be unique") res.send("Username already exist");
+            if (err.errors[0].message === "email must be unique") res.send("Email already exist");
         });
 });
 
