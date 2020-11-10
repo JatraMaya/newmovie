@@ -1,10 +1,14 @@
 const router = require("express").Router();
+const { salt } = require("../helper/bcryptHelper");
 const db = require("../connection/db");
 const User = require("../models/User");
 
 router.post("/", async (req, res) => {
+    const { name, username, email } = req.body;
+    let password = req.body.password;
+    password = await salt(password);
+    console.log(password);
     try {
-        const { name, username, password, email } = req.body;
         const existedUser = await User.findOne({
             where: {
                 username,

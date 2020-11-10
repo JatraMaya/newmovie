@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const db = require("../connection/db");
 const User = require("../models/User");
+const { salt } = require("../helper/bcryptHelper");
 
 // Finding all user
 router.get("/all", async (req, res) => {
@@ -38,13 +39,12 @@ router.get("/:id", async (req, res) => {
 
 //Edit user data by id
 router.patch("/edit/:id", (req, res) => {
+    const body = req.body;
+    const keyValue = {};
+    Object.keys(body).forEach((key) => {
+        keyValue[key] = body[key];
+    });
     try {
-        const body = req.body;
-        const keyValue = {};
-        Object.keys(body).forEach((key) => {
-            keyValue[key] = body[key];
-        });
-        // if(body.password) {body.password = await hash(body.password)}
         User.update(keyValue, {
             where: {
                 id: req.params.id,
