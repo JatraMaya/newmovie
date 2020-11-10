@@ -1,66 +1,89 @@
 const router = require("express").Router();
 const db = require("../connection/db");
-const { genSaltSync, hashSync } = require("bcrypt");
 const User = require("../models/User");
 
 // Finding all user
-router.get("/", (req, res) => {
-    User.findAll({
-        attributes: ["name", "username", "email"],
-    })
-        .then((user) => {
-            res.send(user);
-        })
-        .catch((err) => console.log(err));
+router.get("/all", async (req, res) => {
+    try {
+        const users = await User.findAll({
+            attributes: ["name", "username", "email"],
+        });
+        res.status(200).json({ users: users });
+        return;
+    } catch (err) {
+        res.send(err);
+        return;
+    }
 });
 
 // Finding user by id
-router.get("/:id", (req, res) => {
-    User.findAll({
-        attributes: ["name", "username", "email"],
-        where: {
-            id: req.params.id,
-        },
-    })
-        .then((user) => {
-            res.send(user);
-        })
-        .catch((err) => {
-            res.send(err);
+router.get("/:id", async (req, res) => {
+    try {
+        const user = await User.findOne({
+            attributes: ["name", "username", "email"],
+            where: {
+                id: req.params.id,
+            },
         });
+        if (user === null) {
+            res.status(400).json({ error: "User not found" });
+        } else {
+            res.status(200).json({ user });
+        }
+    } catch (err) {
+        res.send(err);
+        return;
+    }
 });
 
 //Edit user data by id
 router.patch("/edit/:id", (req, res) => {
-    const body = req.body;
-    const keyValue = {};
-    Object.keys(body).forEach((key) => {
-        keyValue[key] = body[key];
-    });
-    const salt = genSaltSync(10);
-    if (body.password) body.password = hashSync(body.password, salt);
-    User.update(keyValue, {
-        where: {
-            id: req.params.id,
-        },
-    })
-        .then(() => {
-            res.send("Profile Changed");
-        })
-        .catch((err) => {
-            res.send(err);
+    try {
+        const body = req.body;
+        const keyValue = {};
+        Object.keys(body).forEach((key) => {
+            keyValue[key] = body[key];
         });
+        // if(body.password) {body.password = await hash(body.password)}
+        User.update(keyValue, {
+            where: {
+                id: req.params.id,
+            },
+        })
+            .then(() => {
+                res.send("Profile Changed");
+            })
+            .catch((err) => {
+                res.send(err);
+            });
+    } catch (err) {
+        res.send(err);
+    }
 });
 
-//Delete user data by id
-router.delete("/delete/:id", (req, res) => {
-    User.destroy({
-        where: {
-            id: req.params.id,
-        },
-    })
-        .then(() => res.send("User deleted!"))
-        .catch((err) => res.send(err));
+router.delete("/delete/:id", async (req, res) => {
+    try {
+        const userExist = await User.findOne({
+            where: {
+                id: req.params.id,
+            },
+        });
+        if (userExist) {
+            User.destroy({
+                where: {
+                    id: req.params.id,
+                },
+            });
+            res.status(200).json({ message: "User deleted" });
+            return;
+        } else {
+            res.status(404).json({ error: "User not found" });
+            return;
+        }
+    } catch (err) {
+        res.send(err);
+        return;
+    }
 });
 
 module.exports = router;

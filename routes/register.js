@@ -1,24 +1,33 @@
 const router = require("express").Router();
-const { genSaltSync, hashSync } = require("bcrypt");
 const db = require("../connection/db");
-
 const User = require("../models/User");
 
-router.post("/", (req, res) => {
-    const body = req.body;
-    const salt = genSaltSync(10);
-    body.password = hashSync(body.password, salt);
-    User.create({
-        name: body.name,
-        username: body.username,
-        password: body.password,
-        email: body.email,
-    })
-        .then(() => res.send("Success"))
-        .catch((err) => {
-            if (err.errors[0].message === "username must be unique") res.send("Username already exist");
-            if (err.errors[0].message === "email must be unique") res.send("Email already exist");
+router.post("/", async (req, res) => {
+    try {
+        const { name, username, password, email } = req.body;
+        const existedUser = await User.findOne({
+            where: {
+                username,
+                email,
+            },
         });
+        if (!existedUser) {
+            await User.create({
+                name,
+                username,
+                password,
+                email,
+            });
+            res.status(200).json({ message: "User added sucessfully" });
+            return;
+        }
+        res.status(409).json({ message: "User already exist" });
+        return;
+    } catch (err) {
+        const errmsg = err.errors[0].message;
+        if (errmsg) res.status(409).json({ message: errmsg });
+        return;
+    }
 });
 
 module.exports = router;
